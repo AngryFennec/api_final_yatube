@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework import filters, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,7 +8,12 @@ from rest_framework.exceptions import ValidationError
 
 from posts.models import Post, Group, Follow
 
-from .serializers import PostSerializer, GroupSerializer, CommentSerializer, FollowSerializer
+from .serializers import (
+    PostSerializer,
+    GroupSerializer,
+    CommentSerializer,
+    FollowSerializer
+)
 from .permissions import IsAuthorOrSafe
 
 
@@ -61,4 +65,3 @@ class FollowViewSet(viewsets.GenericViewSet, ListModelMixin, CreateModelMixin):
         if self.request.user.username == self.request.data['following']:
             raise ValidationError('Нельзя подписаться на себя')
         serializer.save(user=self.request.user)
-        
