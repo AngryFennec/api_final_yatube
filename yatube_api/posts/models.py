@@ -4,21 +4,6 @@ from django.db import models
 User = get_user_model()
 
 
-class Post(models.Model):
-    text = models.TextField()
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='posts')
-    image = models.ImageField(
-        upload_to='posts/', null=True, blank=True)
-
-    class Meta:
-        ordering = ('-pub_date',)
-
-    def __str__(self):
-        return self.text
-
-
 class Group(models.Model):
     title = models.CharField(
         'Заголовок',
@@ -35,6 +20,36 @@ class Group(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Post(models.Model):
+    text = models.TextField('Текст поста')
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='posts',
+        verbose_name='Автор'
+    )
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True
+    )
+    group = models.ForeignKey(
+        Group,
+        related_name='group_posts',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name='Группа'
+    )
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
@@ -60,7 +75,7 @@ class Follow(models.Model):
         verbose_name='Подписчик',
     )
 
-    author = models.ForeignKey(
+    following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='following',
@@ -72,14 +87,9 @@ class Follow(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=('user', 'author'),
+                fields=('user', 'following'),
                 name='%(app_label)s_%(class)s_user-follow-constraint'
             ),
-            models.CheckConstraint(
-                check=~models.Q(user=models.F('author')),
-                name='could_not_follow_itself'
-            )
-
         ]
 
     def __str__(self):

@@ -1,7 +1,11 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework import filters, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import ValidationError
+
 
 from posts.models import Post, Group, Follow
 
@@ -12,7 +16,7 @@ from .permissions import IsAuthorOrSafe
 class PostViewSet(viewsets.ModelViewSet):
     """Вьюсет для запросов, касающихся постов."""
     queryset = Post.objects.all()
-    permission_classes = [IsAuthenticated, IsAuthorOrSafe]
+    permission_classes = [IsAuthorOrSafe]
     serializer_class = PostSerializer
 
     def perform_create(self, serializer):
@@ -23,12 +27,13 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для запросов, касающихся групп."""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для запросов, касающихся комментариев."""
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsAuthorOrSafe]
+    permission_classes = [IsAuthorOrSafe]
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
@@ -40,12 +45,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         return post.comments.all()
 
 
-class FollowViewSet(viewsets.GenericViewSet):
+class FollowViewSet(viewsets.GenericViewSet, ListModelMixin, CreateModelMixin):
     """Вьюсет для запросов, касающихся фолловинга."""
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['following__username']
 
     def get_queryset(self):
@@ -54,5 +59,6 @@ class FollowViewSet(viewsets.GenericViewSet):
 
     def perform_create(self, serializer):
         if self.request.user.username == self.request.data['following']:
-            raise ValidationError('Нельзя подписаться на самого себя')
+            raise ValidationError('Нельзя подписаться на себя')
         serializer.save(user=self.request.user)
+        
