@@ -1,5 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework import filters, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
