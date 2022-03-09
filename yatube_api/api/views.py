@@ -8,7 +8,6 @@ from rest_framework import filters, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import ValidationError
 
-
 from posts.models import Post, Group, Follow
 
 from .serializers import (
@@ -58,7 +57,7 @@ class FollowViewSet(viewsets.GenericViewSet, ListModelMixin, CreateModelMixin):
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    search_fields = ['following__username']
+    search_fields = ('user__username', 'following__username')
 
     def get_queryset(self):
         user = self.request.user
